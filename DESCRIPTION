@@ -1,0 +1,23 @@
+Package: vpvdr-local
+Title: Visualise Posteriors and Run Posterior Predictive Checks from VPVD Fits
+Version: 0.0.0.9000
+Authors@R: 
+    person("Johan", "Alsiö", , "johan.alsio@bristol.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Inspect the posteriors from a valence-probe visual discrimination task stanfit object and simulate behaviour to perform a posterior predictive check.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.0
+Imports: 
+    cowplot,
+    dplyr,
+    ggplot2,
+    purrr,
+    RColorBrewer,
+    rstan,
+    stringr
+Depends: 
+    R (>= 2.10)
+LazyData: true
