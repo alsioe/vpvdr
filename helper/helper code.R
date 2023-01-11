@@ -1,8 +1,12 @@
-library(devtools)
+library('devtools')
+library('tidyverse')
+library('cowplot')
+library('RColorBrewer')
 
 # TO USE EXISTING R PACKAGE
 # library('devtools')
 # use_package('dplyr')
+# use_package('tidyr')
 # use_package('purrr')
 # use_package('ggplot2')
 # use_package('rstan')
@@ -18,54 +22,76 @@ library(devtools)
 # use_r('simulate_choices_VPVD')
 # use_r('summarise_sessions_from_list')
 # use_r('summarise_correct')
+# use_r('palette_by_group')
 
 # TO USE DATA IN PACKAGE
+# Example trials (could be made variable in the future, currently it is not)
 # trials <- read.csv('helper/vpvd_trials4000.csv')
 # use_data(trials)
-
-# I THINK THE GRID PACKAGES ARE NOT NECESSARY
-# install.packages('grid')
-# install.packages('gridExtra')
-# library('grid')
-# library('gridExtra')
 #
-library('tidyverse')
-library('cowplot')
+# Example fit (this is huge - to be updated with smaller one!)
+# example_fit <- readRDS("helper/reversals_fit10.rds")
+# use_data(example_fit)
 
-fit <- readRDS("helper/reversals_fit10.rds")
+# What files to ignore?
+# use_build_ignore('helper')
 
-params <- rstan::extract(fit)
+# Let's start working ...
+#
+# I've added this to the package's data
+# fit0 <- readRDS("helper/reversals_fit10.rds")
+# Meaning we can just do this:
+data(example_fit)
+
+# Read in parameters using rstan::extract
+# params <- rstan::extract(example_fit)
+
+# There are a number of parameters, only some of which we need!
 names(params)
 
-# Use of str_detect
-# stringr::str_detect(string = names(params),
-#                     pattern = 'by_group')
+params <- get_posteriors(example_fit)
 
-group_params <- params[stringr::str_detect(string = names(params),
-                                           pattern = 'by_group_drug$')]
+# Sanity check
+names(params$group_params)
+names(params$subject_params)
 
-# Note that the $ at the end signals that we only want the entries
-# where 'subject_effect' ends the name of the parameter - this means
-# that the raw_unit_normal parameter are not carried on
+group_params <- params$group_params
+subject_params <- params$subject_params
 
-subject_params <- params[stringr::str_detect(string = names(params),
-                                           pattern = 'subject_effect$')]
+# The param data are still in lists
+typeof(group_params)
 
-names(group_params)
-names(subject_params)
+# We have a 3 dimensional array for each parameter, where
+# the 1st dimension is the number of SAMPLES in the posterior
+# the 2nd dimension is the number of GROUPS
+# the 3rd dimension is irrelevant
+dim(group_params[[1]])
+
+# We can visualise the grouped parameters like so
+# Currently struggling to run this without separately loading the
+# libraries/packages (tidyr, ggplot2, cowplot). They are all under
+# dependencies in DESCRIPTION already so this needs further testing.
+visual_posteriors(params = group_params,
+                  grouping = c('veh', 'low', 'high')
+                  )
 
 
+# Lets simulate some VPVD behaviour from a couple of quick settings:
 
-names(params)
-# testing space
+nIter <- 1000
+nGroups <- 3
+nTrials <- 4000
 
-test_posteriors <- function(stanfit) {
-    wFit <- readRDS(stanfit)
-    return(rstan::extract(wFit))
-}
+simulated_rat <- simulate_choices_vpvd(nTrials = nTrials)
 
-params <- get_posteriors(fit, group_tag = 'by_group_drug$')
-str(params)
+summarise_correct(simulated_rat) %>%
+
+    ggplot(aes(x = session,
+               y = mean)) +
+    geom_line(alpha = 0.5) +
+    facet_grid(. ~ trial_type) +
+    ylim(0, 1)
+
 
 ##########################################################
 # Example
@@ -144,7 +170,7 @@ dim(test)
 # Now, simulate VPVD behaviour with a vectorised simulator
 # Let's create a test bed
 #
-nIter <- 1000
+nIter <- 10
 nGroups <- 3
 nTrials <- 4000
 
@@ -180,17 +206,23 @@ str(test_vect)
 system.time(
     df <- summarise_correct(test_vect)
 )
+
+
 str(df)
 object.size(df)/1048576
+
+###
 
 head(df)
 
 ggplot(data = df,
        aes(x = session,
-           y = mean)) +
+           y = mean,
+           colour = subjID)) +
     geom_line(alpha = 0.5) +
-    facet_grid(. ~ trial_type) +
-    ylim(0, 1)
+    facet_grid(grouping ~ trial_type) +
+    ylim(0, 1) +
+    scale_colour_manual(values = palette_by_group(nGroups = nGroups, nIter = nIter))
 
 ###############################################################################
 # IGNORE ALL BELOW THIS LINE

@@ -14,9 +14,9 @@ summarise_correct <- function(list) {
     df <- data.frame(
             subjID = sort(rep(x = unique(list$subjID),
                                times = nTrials)
-                           ),
+                              ),
             grouping = sort(rep(x = unique(list$grouping),
-                                 times = nSubj * nTrials)
+                                 times = nSubj / nGroups * nTrials)
                              ),
             trial = rep(x = 1:nTrials,
                          times = nSubj),

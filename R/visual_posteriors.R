@@ -1,9 +1,10 @@
 #' Visualise density plots from posteriors
 #'
-#' @param params
-#' @param grouping
+#' @param params These are the posterior parameters that you want to use for the simulation
 #'
-#' @return
+#' @param grouping Names of the groups/conditions in the experiment.
+#'
+#' @return Plots a cowplot of one density plot for each parameter
 #' @export
 #'
 #' @examples
@@ -19,9 +20,10 @@ visual_posteriors <- function(params,
 
         names(df) <- grouping
 
-        long_df <- gather(df,
-                          key = 'grouping',
-                          value = 'value')
+        long_df <- pivot_longer(data = df,
+                                cols = everything(),
+                                names_to = 'grouping',
+                                values_to = 'value')
 
         # Make sure the factors have the right order
         long_df$grouping <- factor(x = long_df$grouping,
