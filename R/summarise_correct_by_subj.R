@@ -1,4 +1,4 @@
-#' Summarises correct choices - faster function (no for loop)
+#' Summarises data by subject (not group)
 #'
 #' @param list
 #'
@@ -6,27 +6,27 @@
 #' @export
 #'
 #' @examples
-summarise_correct <- function(list) {
+summarise_correct_by_subj <- function(list) {
     nSubj <- length(list$subjID)
     nGroups <- length(unique(list$grouping))
     nTrials <- length(list$trial)
 
     df <- data.frame(
-            subjID = sort(rep(x = unique(list$subjID),
-                               times = nTrials)
-                              ),
-            grouping = sort(rep(x = unique(list$grouping),
-                                 times = nSubj / nGroups * nTrials)
-                             ),
-            trial = rep(x = 1:nTrials,
+        subjID = sort(rep(x = unique(list$subjID),
+                          times = nTrials)
+                      ),
+        grouping = sort(rep(x = unique(list$grouping),
+                            times = nSubj / nGroups * nTrials)
+                        ),
+        trial = rep(x = 1:nTrials,
+                    times = nSubj),
+        stim_left = rep(x = list$stim_left,
+                        times = nSubj),
+        stim_right = rep(x = list$stim_right,
                          times = nSubj),
-            stim_left = rep(x = list$stim_left,
-                            times = nSubj),
-            stim_right = rep(x = list$stim_right,
-                             times = nSubj),
-            p_right = c(list$p_right),
-            chose_right = c(list$chose_right),
-            outcome = c(list$outcome)
+        p_right = c(list$p_right),
+        chose_right = c(list$chose_right),
+        outcome = c(list$outcome)
         )
 
     # Enter trial type
@@ -60,7 +60,7 @@ summarise_correct <- function(list) {
                             levels = c('vd',
                                        'pos',
                                        'neg')
-                                      )
+                            )
 
     df$subjID <- as.factor(df$subjID)
     df$grouping <- as.factor(df$grouping)
@@ -71,7 +71,6 @@ summarise_correct <- function(list) {
                  trial_type,
                  subjID,
                  grouping) %>%
-                     summarise(mean = mean(correct)
-                               )
+        summarise(correct = mean(correct))
 
 }

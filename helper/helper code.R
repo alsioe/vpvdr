@@ -23,6 +23,8 @@ library('RColorBrewer')
 # use_r('summarise_sessions_from_list')
 # use_r('summarise_correct')
 # use_r('palette_by_group')
+# use_r('summarise_correct_by_subj')
+# use_r('summarise_correct_by_group')
 
 # TO USE DATA IN PACKAGE
 # Example trials (could be made variable in the future, currently it is not)
@@ -38,59 +40,106 @@ library('RColorBrewer')
 
 # Let's start working ...
 #
-# I've added this to the package's data
-# fit0 <- readRDS("helper/reversals_fit10.rds")
-# Meaning we can just do this:
-data(example_fit)
+# The fits I have for citalopram are too large to (ca 80 MB) add to Github as
+# data so you'll need to copy the file locally and run a readRDS
+fit <- readRDS("helper/reversals_fit10.rds")
 
 # Read in parameters using rstan::extract
-# params <- rstan::extract(example_fit)
+params <- rstan::extract(fit)
 
 # There are a number of parameters, only some of which we need!
 names(params)
 
-params <- get_posteriors(example_fit)
+# Try this function
+?get_posteriors
+params <- get_posteriors(fit)
 
 # Sanity check
 names(params$group_params)
 names(params$subject_params)
 
+# Let's make them into separate lists
 group_params <- params$group_params
 subject_params <- params$subject_params
 
-# The param data are still in lists
-typeof(group_params)
-
 # We have a 3 dimensional array for each parameter, where
 # the 1st dimension is the number of SAMPLES in the posterior
-# the 2nd dimension is the number of GROUPS
-# the 3rd dimension is irrelevant
+# the 2nd dimension is the number of GROUPS (here, doses)
+# the 3rd dimension is irrelevant (would house one within-subject factor)
 dim(group_params[[1]])
 
 # We can visualise the grouped parameters like so
 # Currently struggling to run this without separately loading the
 # libraries/packages (tidyr, ggplot2, cowplot). They are all under
 # dependencies in DESCRIPTION already so this needs further testing.
+?visual_posteriors
 visual_posteriors(params = group_params,
                   grouping = c('veh', 'low', 'high')
                   )
 
 
-# Lets simulate some VPVD behaviour from a couple of quick settings:
+# OK, if that looks like decent posteriors that Stan could have thrown back
+# if the modelling was working, we are ready to simulate behaviour!
 
-nIter <- 1000
-nGroups <- 3
-nTrials <- 4000
+# Let's simulate some unrealistic VPVD behaviour first to make sure the code
+# is working OK:
 
-simulated_rat <- simulate_choices_vpvd(nTrials = nTrials)
+nIter <- 100 # number of samples per condition
+nGroups <- 3 # number of conditions
+nTrials <- 2800 # number of trials of VPVD
 
+?simulate_choices_vpvd
+simulated_rats <- simulate_choices_vpvd(nTrials = nTrials,
+                                       nIter = nIter,
+                                       nGroups = nGroups,
+                                       alpha_w = c(rep(0.002, nIter),
+                                                   rep(0.004, nIter),
+                                                   rep(0.006, nIter)
+                                                   ),
+                                       alpha_l = rep(0.002, nIter * nGroups),
+                                       beta = rep(2, nIter * nGroups),
+                                       kappa = rep(0.2, nIter * nGroups),
+                                       tau = rep(0.1, nIter * nGroups),
+                                       upsilon = rep(5, nIter * nGroups))
+
+?summarise_correct_by_subj
+df_subj <- summarise_correct_by_subj(simulated_rats)
+df_group <- summarise_correct_by_group(df_subj)
+
+# wDf <- data.frame(
+#             x = rep(c(1,2,3,4,5), 200),
+#             y = rnorm(n = 1000, mean = 100, sd = 10)
+#             )
+#
+# wDf %>%
+#     group_by(x) %>%
+#     summarise(mean = mean(y),
+#               sem = sd(y) / sqrt(n()),
+#               q0025 = quantile(y, probs = 0.025),
+#               q0975 = quantile(y, probs = 0.975)
+#               )
+# df
+
+
+plot(df_group$q.025)
+plot(df_group$q.500)
+plot(df_group$q.975)
+
+str(df)
+
+# This code plots each subject indidually, panels separated by group
 summarise_correct(simulated_rat) %>%
-
     ggplot(aes(x = session,
-               y = mean)) +
+               y = mean,
+               colour = subjID)) +
     geom_line(alpha = 0.5) +
-    facet_grid(. ~ trial_type) +
-    ylim(0, 1)
+    facet_grid(grouping ~ trial_type) +
+    ylim(0, 1) +
+    geom_hline(yintercept = 0.5,
+               linetype = 'dashed') +
+    theme(legend.position = 'none')
+
+# This code plots
 
 
 ##########################################################
@@ -222,7 +271,10 @@ ggplot(data = df,
     geom_line(alpha = 0.5) +
     facet_grid(grouping ~ trial_type) +
     ylim(0, 1) +
-    scale_colour_manual(values = palette_by_group(nGroups = nGroups, nIter = nIter))
+    scale_colour_manual(values = palette_by_group(nGroups = nGroups,
+                                                  nIter = nIter))  +
+    theme_bw() +
+    legend
 
 ###############################################################################
 # IGNORE ALL BELOW THIS LINE
