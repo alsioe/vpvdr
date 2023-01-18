@@ -175,7 +175,9 @@ system.time(
 # we will do this automatically at some point
 object.size(post_pred_check)/1048576 # output the size in MB
 
-ppc_subj <- summarise_correct_by_subj(post_pred_check)
+ppc_subj <- summarise_correct_by_subj(post_pred_check,
+                                      c('veh', 'low', 'high'))
+
 ppc_group <- summarise_correct_by_group(ppc_subj)
 
 # Same plot as above
@@ -187,7 +189,8 @@ ppc_group %>%
                     ymax = q.750,
                     fill = grouping,
                     colour = NA),
-                alpha = 0.2) +
+                alpha = 0.2,
+                show.legend = FALSE) +
     geom_line() +
     facet_grid(. ~ trial_type) +
     ylim(0, 1) +

@@ -1,0 +1,27 @@
+---
+title: "How to use the vpvdr package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to use the vpvdr package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+install.packages('devtools')
+library('devtools')
+install_github('alsioe/vpvdr')
+```
+
+Example workflow
+
+```{r setup}
+print('Hello world!')
+```

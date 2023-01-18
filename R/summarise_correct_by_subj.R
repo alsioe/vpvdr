@@ -6,7 +6,9 @@
 #' @export
 #'
 #' @examples
-summarise_correct_by_subj <- function(list) {
+summarise_correct_by_subj <- function(list,
+                                      groups = 1:length(unique(list$grouping))
+                                      ) {
     nSubj <- length(list$subjID)
     nGroups <- length(unique(list$grouping))
     nTrials <- length(list$trial)
@@ -63,7 +65,8 @@ summarise_correct_by_subj <- function(list) {
                             )
 
     df$subjID <- as.factor(df$subjID)
-    df$grouping <- as.factor(df$grouping)
+    df$grouping <- factor(x = df$grouping,
+                          labels = groups)
 
     #RETURN
     df %>%
