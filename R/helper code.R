@@ -14,6 +14,9 @@ library('RColorBrewer')
 # use_package('cowplot')
 # use_package('RColorBrewer')
 
+# TO CREATE A NEW VIGNETTE
+# use_vignette('vpvdr', title = 'How to use the vpvdr package')
+
 # TO CREATE NEW FUNCTION
 # use_r('prior_pred_check')
 # use_r('visual_posteriors')
