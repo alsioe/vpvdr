@@ -4,10 +4,13 @@
 \alias{summarise_correct_by_subj}
 \title{Summarises data by subject (not group)}
 \usage{
-summarise_correct_by_subj(list)
+summarise_correct_by_subj(list, groups = 1:length(unique(list$grouping)))
 }
 \arguments{
 \item{list}{}
+}
+\value{
+Data frame with session data for each subject and trial type
 }
 \description{
 Summarises data by subject (not group)

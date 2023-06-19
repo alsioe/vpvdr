@@ -2,7 +2,7 @@
 #'
 #' @param list
 #'
-#' @return
+#' @return Data frame with session data for each subject and trial type
 #' @export
 #'
 #' @examples
