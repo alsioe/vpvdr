@@ -1,6 +1,8 @@
 #' Summarises data by subject (not group)
 #'
-#' @param list
+#' @param list Data structure from simulate_choices_vpvd
+#'
+#' @param groups Names of the groups/conditions in the experiment.
 #'
 #' @return Data frame with session data for each subject and trial type
 #' @export
@@ -65,6 +67,7 @@ summarise_correct_by_subj <- function(list,
                             )
 
     df$subjID <- as.factor(df$subjID)
+
     df$grouping <- factor(x = df$grouping,
                           labels = groups)
 

@@ -221,8 +221,7 @@ simulate_choices_vpvd <-
 
     } # end of trial for loop
 
-    # Here is an intermediate step just to highlight that we need
-    # the p_right and the choice column to be able to run the final bit
+    # Pack everything into a list to return
     summary <- list(
         subjID = subjID,
         grouping = grouping,

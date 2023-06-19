@@ -98,20 +98,24 @@ simulated_rats <- simulate_choices_vpvd(nTrials = nTrials,
                                        upsilon = rep(5, nIter * nGroups))
 
 ?summarise_correct_by_subj
-df_subj <- summarise_correct_by_subj(simulated_rats)
+df_subj <- summarise_correct_by_subj(list = simulated_rats,
+                                     groups = c('slow', 'medium', 'fast'))
+
 df_group <- summarise_correct_by_group(df_subj)
+
+head(df_group)
 
 # Let's plot that out in ggplot, using geom_ribbon() to visualise the 50% HDI
 df_group %>%
     ggplot(aes(x = session,
                y = mean,
-               colour = grouping)) +
-    geom_ribbon(aes(ymin = q.250,
-                    ymax = q.750,
-                    fill = grouping,
-                    colour = NA),
-                alpha = 0.2) +
+               colour = grouping,
+               fill = grouping)) +
     geom_line() +
+    geom_ribbon(aes(ymin = q.250,
+                    ymax = q.750),
+                alpha = 0.2,
+                colour = NA) +
     facet_grid(. ~ trial_type) +
     ylim(0, 1) +
     geom_hline(yintercept = 0.5,
@@ -173,22 +177,24 @@ system.time(
 # we will do this automatically at some point
 object.size(post_pred_check)/1048576 # output the size in MB
 
-ppc_subj <- summarise_correct_by_subj(post_pred_check,
-                                      c('veh', 'low', 'high'))
+ppc_subj <- summarise_correct_by_subj(list = post_pred_check, 
+                                      groups = c('veh', 'low', 'high'))
 
 ppc_group <- summarise_correct_by_group(ppc_subj)
+
+head(ppc_group)
 
 # Same plot as above
 ppc_group %>%
     ggplot(aes(x = session,
                y = mean,
-               colour = grouping)) +
+               colour = grouping,
+               fill = grouping)) +
     geom_ribbon(aes(ymin = q.250,
-                    ymax = q.750,
-                    fill = grouping,
-                    colour = NA),
+                    ymax = q.750),
                 alpha = 0.2,
-                show.legend = FALSE) +
+                colour = NA,
+                show.legend = TRUE) +
     geom_line() +
     facet_grid(. ~ trial_type) +
     ylim(0, 1) +

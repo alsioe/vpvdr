@@ -1,3 +1,11 @@
+#' Summarise correct responses by group
+#'
+#' @param df_subj Data frame containing data
+#'
+#' @return Quantiles for df_subj by session, trial type, and grouping
+#' @export
+#'
+#' @examples
 summarise_correct_by_group <- function(df_subj) {
     df_subj %>%
         group_by(session,
