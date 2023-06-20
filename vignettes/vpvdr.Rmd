@@ -22,7 +22,11 @@ library('tidyverse')
 library('cowplot')
 library('RColorBrewer')
 
-# Get vpvdr from github using 
+# rm(list=ls())
+
+# Get vpvdr from github using devtools - note there are large files so we need
+# to first change the timeout
+options(timeout=9999999)
 devtools::install_github("alsioe/vpvdr")
 library('vpvdr')
 
@@ -41,6 +45,9 @@ githubURL <-
 download.file(url = githubURL,
               destfile = 'test_fit10.rds')
 fit <- readRDS('test_fit10.rds')
+
+list.files('../helper/')
+fit <- readRDS("../helper/2A_reversals_fit1.rds")
 
 # Read in parameters using rstan::extract - this happens inside get_posteriors()
 # params <- rstan::extract(fit)
@@ -124,20 +131,46 @@ df_group %>%
     scale_color_brewer(palette = 'Dark2') +
     scale_fill_brewer(palette = 'Dark2')
 
-# If we really want to see the performance of each iteration, here's that.
-df_subj %>%
+# Let's try that again with different alpha-loss instead
+simulated_rats <- simulate_choices_vpvd(nTrials = nTrials,
+                                       nIter = nIter,
+                                       nGroups = nGroups,
+                                       alpha_w = rep(0.002, nIter * nGroups),
+                                       alpha_l = c(rep(0.002, nIter),
+                                                   rep(0.004, nIter),
+                                                   rep(0.006, nIter)
+                                                   ),
+                                       beta = rep(2, nIter * nGroups),
+                                       kappa = rep(0.2, nIter * nGroups),
+                                       tau = rep(0.1, nIter * nGroups),
+                                       upsilon = rep(5, nIter * nGroups))
+
+?summarise_correct_by_subj
+df_subj <- summarise_correct_by_subj(list = simulated_rats,
+                                     groups = c('slow', 'medium', 'fast'))
+
+df_group <- summarise_correct_by_group(df_subj)
+
+head(df_group)
+
+# Let's plot that out in ggplot, using geom_ribbon() to visualise the 50% HDI
+df_group %>%
     ggplot(aes(x = session,
-               y = correct,
-               colour = subjID)) +
-    geom_line(alpha = 0.1) +
+               y = mean,
+               colour = grouping,
+               fill = grouping)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = q.250,
+                    ymax = q.750),
+                alpha = 0.2,
+                colour = NA) +
     facet_grid(. ~ trial_type) +
     ylim(0, 1) +
     geom_hline(yintercept = 0.5,
                linetype = 'dashed') +
     theme_bw() +
-    theme(legend.position = 'NONE') +
-    scale_colour_manual(values = palette_by_group(nGroups = nGroups,
-                                                  nIter = nIter))
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2')
 
 # Next, let's take our actual posterior and feed that in to the simulator code.
 nIter <- 1000 # a minimum of 1000 to get accurate posterior y's
