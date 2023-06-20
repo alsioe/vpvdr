@@ -52,7 +52,7 @@ rm(list=ls())
 list.files('helper/')
 fit <- readRDS("helper/reversals_fit10.rds")
 fit <- readRDS("helper/2A_reversals_fit1.rds")
-fit <- readRDS("helper/2C_reversals_fit10.rds")
+fit <- readRDS("helper/2C_reversals_fit6.rds")
 
 # Read in parameters using rstan::extract - this happens inside get_posteriors()
 # params <- rstan::extract(fit)

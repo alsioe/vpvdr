@@ -26,6 +26,9 @@ library('RColorBrewer')
 
 # Get vpvdr from github using devtools - note there are large files so we need
 # to first change the timeout
+# 
+# If you are updating vpvdr you might need to detach first
+# detach('package:vpvdr')
 options(timeout=9999999)
 devtools::install_github("alsioe/vpvdr")
 library('vpvdr')
@@ -47,7 +50,8 @@ download.file(url = githubURL,
 fit <- readRDS('test_fit10.rds')
 
 list.files('../helper/')
-fit <- readRDS("../helper/2A_reversals_fit1.rds")
+fit <- readRDS("../helper/2C_reversals_fit6.rds")
+fit <- readRDS('../helper/reversals_fit10.rds')
 
 # Read in parameters using rstan::extract - this happens inside get_posteriors()
 # params <- rstan::extract(fit)
@@ -61,9 +65,21 @@ params <- get_posteriors(fit)
 names(params$group_params)
 names(params$subject_params)
 
+# Create a list of plots
+six_parameters <- c('reward_rate_by_group_drug',
+                    'punish_rate_by_group_drug',
+                    'prob_discount_by_group_drug',
+                    'reinf_sensitivity_by_group_drug',
+                    'side_stickiness_by_group_drug',
+                    'stimulus_stickiness_by_group_drug')
+
+parameter_list <- names(group_params)
+
 # Let's make them into separate lists
 group_params <- params$group_params
 subject_params <- params$subject_params
+
+str(group_params)
 
 # We have a 3 dimensional array for each parameter, where
 # the 1st dimension is the number of SAMPLES in the posterior
@@ -185,12 +201,56 @@ draws <- sample(x = dim(group_params$reinf_sensitivity_by_group_drug)[1],
                 replace = FALSE)
 
 # This will be baked into a function at some point
-w <- group_params$reward_rate_by_group_drug[draws, 1:nGroups, 1]
-l <- group_params$punish_rate_by_group_drug[draws, 1:nGroups, 1]
-b <- group_params$reinf_sensitivity_by_group_drug[draws, 1:nGroups, 1]
-k <- group_params$side_stickiness_by_group_drug[draws, 1:nGroups, 1]
-t <- group_params$stimulus_stickiness_by_group_drug[draws, 1:nGroups, 1]
-u <- group_params$prob_discount_by_group_drug[draws, 1:nGroups, 1]
+
+{ # Current workaround chunk
+if (six_parameters[1] %in% names(group_params)) {
+    w <- group_params$reward_rate_by_group_drug[draws, 1:nGroups, 1]
+} else {
+    w <- matrix(data = rep(0, nIter*nGroups),
+                nrow = nIter,
+                ncol = nGroups)
+}
+
+if (six_parameters[2] %in% names(group_params)) {
+    l <- group_params$punish_rate_by_group_drug[draws, 1:nGroups, 1]
+} else {
+    l <- matrix(data = rep(0, nIter*nGroups),
+                nrow = nIter,
+                ncol = nGroups)
+}
+
+if (six_parameters[3] %in% names(group_params)) {
+    u <- group_params$prob_discount_by_group_drug[draws, 1:nGroups, 1]
+} else {
+    u <- matrix(data = rep(0, nIter*nGroups),
+                nrow = nIter,
+                ncol = nGroups)
+}
+
+if (six_parameters[4] %in% names(group_params)) {
+    b <- group_params$reinf_sensitivity_by_group_drug[draws, 1:nGroups, 1]
+} else {
+    b <- matrix(data = rep(0, nIter*nGroups),
+                nrow = nIter,
+                ncol = nGroups)
+}
+
+if (six_parameters[5] %in% names(group_params)) {
+    k <- group_params$side_stickiness_by_group_drug[draws, 1:nGroups, 1]
+} else {
+    k <- matrix(data = rep(0, nIter*nGroups),
+                nrow = nIter,
+                ncol = nGroups)
+}
+
+if (six_parameters[6] %in% names(group_params)) {
+    t <- group_params$stimulus_stickiness_by_group_drug[draws, 1:nGroups, 1]
+} else {
+    t <- matrix(data = rep(0, nIter*nGroups),
+                nrow = nIter,
+                ncol = nGroups)
+}
+} #end of workaround chunk
 
 # Simulate all subjects in parallel
 # nIter = 1000; groups = 3 takes <10 seconds over here

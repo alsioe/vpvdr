@@ -9,8 +9,18 @@
 #'
 #' @examples
 visual_posteriors <- function(params,
-                              grouping = 1:dim(params)[[1]][2]
+                              grouping = 1:dim(params[[1]])[2]
                               ) {
+
+    # Create a list of plots - to add: FLEXIBILITY in the parameters
+    six_parameters <- c('reward_rate_by_group_drug',
+                        'punish_rate_by_group_drug',
+                        'prob_discount_by_group_drug',
+                        'reinf_sensitivity_by_group_drug',
+                        'side_stickiness_by_group_drug',
+                        'stimulus_stickiness_by_group_drug')
+
+    parameter_list <- names(params)
 
     # Enter some logic here for group vs. subject if required
 
@@ -82,50 +92,55 @@ visual_posteriors <- function(params,
         return(outplot)
     }
 
-    # Create a list of plots - to add: FLEXIBILITY in the parameters
-    #parameter_list <- names(group_params)
+    # Create a plot for each parameter in params that matches six_parameters
+    for (p in six_parameters) {
 
-    plot_reward_rate <- make_density_plot(param = params$reward_rate_by_group_drug,
-                                          grouping = grouping)
-    plot_punish_rate <- make_density_plot(param = params$punish_rate_by_group_drug,
-                                          grouping = grouping)
-    plot_prob_discount <- make_density_plot(param = params$prob_discount_by_group_drug,
-                                            grouping = grouping)
-    plot_reinf_sensitivity <- make_density_plot(param = params$reinf_sensitivity_by_group_drug,
-                                                grouping = grouping)
-    plot_side_stickiness <- make_density_plot(param = params$side_stickiness_by_group_drug,
-                                              grouping = grouping)
-    plot_stimulus_stickiness <- make_density_plot(param = params$stimulus_stickiness_by_group_drug,
-                                                  grouping = grouping)
+        if (p == six_parameters[1]) {
+            to_plot <- vector(mode = 'character')
+        }
 
-    master_plot <-
+        if (p %in% parameter_list) {
+            do.call('<-',
+                    list(paste0('plot_', p),
+                         make_density_plot(param = params[[match(p, names(params))]],
+                                           grouping = grouping)
+                         )
+                    )
+
+            to_plot <- append(to_plot, paste0('plot_', p))
+
+        }
+
+    }
+
+
+    for (i in 1:length(to_plot)) {
+        if (i == 1) plotlist <- list()
+
+        plotlist[[i]] <- get(to_plot[i]) + theme(legend.position = 'none')
+    }
 
     # For more info, see shared legends in cowplot (Wilke lab)
     # https://wilkelab.org/cowplot/articles/shared_legends.html
     legend_b <- get_legend(
-        plot_reinf_sensitivity + theme(legend.position = 'bottom')
+        plot_reinf_sensitivity_by_group_drug + theme(legend.position = 'bottom')
         )
 
     # RETURN
     master_plot <-
-        plot_grid(plotlist =
-                  list(plot_reward_rate + theme(legend.position = "none"),
-                       plot_punish_rate + theme(legend.position = "none"),
-                       plot_prob_discount + theme(legend.position = "none"),
-                       plot_reinf_sensitivity + theme(legend.position = "none"),
-                       plot_side_stickiness + theme(legend.position = "none"),
-                       plot_stimulus_stickiness + theme(legend.position = "none")
-                       ),
-                  labels = c('Reward rate',
-                             'Punish rate',
-                             'Probe discount rate',
-                             'Reinf. sensitity',
-                             'Side stickiness',
-                             'Stimulus stickiness'),
+        plot_grid(plotlist = plotlist,
+                  # list(plot_reward_rate_by_group_drug + theme(legend.position = "none"),
+                  #      plot_punish_rate_by_group_drug + theme(legend.position = "none"),
+                  #      # plot_prob_discount + theme(legend.position = "none"),
+                  #      plot_reinf_sensitivity_by_group_drug + theme(legend.position = "none"),
+                  #      plot_side_stickiness_by_group_drug + theme(legend.position = "none")
+                  #      # plot_stimulus_stickiness + theme(legend.position = "none")
+                       # ),
+                  labels = to_plot,
                   label_x = 0.1,
                   label_y = 1,
                   hjust = 0,
-                  nrow = 3
+                  ncol = 2
                   )
 
     return(plot_grid(plotlist = list(master_plot, legend_b),
