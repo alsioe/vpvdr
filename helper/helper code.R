@@ -53,6 +53,7 @@ list.files('helper/')
 fit <- readRDS("helper/reversals_fit10.rds")
 fit <- readRDS("helper/2A_reversals_fit1.rds")
 fit <- readRDS("helper/2C_reversals_fit6.rds")
+fit <- readRDS("helper/2C_reversals_fit10.rds")
 
 # Read in parameters using rstan::extract - this happens inside get_posteriors()
 # params <- rstan::extract(fit)
@@ -100,13 +101,13 @@ simulated_rats <- simulate_choices_vpvd(nTrials = nTrials,
                                        nIter = nIter,
                                        nGroups = nGroups,
                                        alpha_w = c(rep(0.002, nIter),
-                                                   rep(0.004, nIter),
-                                                   rep(0.006, nIter)
+                                                   rep(0.006, nIter),
+                                                   rep(0.02, nIter)
                                                    ),
                                        alpha_l = rep(0.002, nIter * nGroups),
                                        beta = rep(2, nIter * nGroups),
-                                       kappa = rep(0.2, nIter * nGroups),
-                                       tau = rep(0.1, nIter * nGroups),
+                                       kappa = rep(0.1, nIter * nGroups),
+                                       tau = rep(0.2, nIter * nGroups),
                                        upsilon = rep(5, nIter * nGroups))
 
 ?summarise_correct_by_subj
@@ -190,25 +191,60 @@ ppc_subj <- summarise_correct_by_subj(post_pred_check,
 
 ppc_group <- summarise_correct_by_group(ppc_subj)
 
+# https://stackoverflow.com/questions/3472980/how-to-change-facet-labels
+# note format of 'labeller' function has been updated
+trial_types_labels <- list('vd' = 'Standard (A- < B+)',
+                           'pos' = 'Positive (B+ > C50/50)',
+                           'neg' = 'Negative (A- < C50/50)')
+
+trial_type_labeller <- function(variable, value) {
+    return(trial_types_labels[value])
+}
+
+# These palettes are not exact
+palette_mona <- c('#585756',
+                'orange',
+                'darkorange')
+
+palette_mona <- c('#585756',
+                  '#14CAFF',
+                  '#293597')
+
 # Same plot as above
 ppc_group %>%
     ggplot(aes(x = session,
                y = mean,
-               colour = grouping)) +
+               colour = grouping,
+               fill = grouping)) +
     geom_ribbon(aes(ymin = q.250,
-                    ymax = q.750,
-                    fill = grouping,
-                    colour = NA),
+                    ymax = q.750),
                 alpha = 0.2,
-                show.legend = FALSE) +
+                colour = NA,
+                show.legend = TRUE) +
     geom_line() +
-    facet_grid(. ~ trial_type) +
+    facet_grid(. ~ trial_type,
+               labeller = trial_type_labeller
+               ) +
     ylim(0, 1) +
     geom_hline(yintercept = 0.5,
                linetype = 'dashed') +
+    geom_hline(yintercept = 0.8,
+               linetype = 'dashed') +
     theme_bw() +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2')
+    # scale_color_brewer(palette = 'Blues') +
+    # scale_fill_brewer(palette = 'Blues') +
+    scale_x_continuous(breaks=seq(0,15,1)) +
+    theme(panel.grid.major.x = element_blank()) +
+    theme(panel.grid.minor.x = element_blank()) +
+    theme(panel.grid.major.y = element_blank()) +
+    theme(panel.grid.minor.y = element_blank()) +
+    theme(strip.background = element_rect(fill="white")) +
+    # scale_color_discrete(labels=c('0', '0.3', '1.0')) +
+    # scale_fill_discrete(labels=c('0', '0.3', '1.0')) +
+    scale_fill_manual(values = palette_mona) +
+    scale_color_manual(values = palette_mona) +
+    xlab('Reversal session')
+
 
 ###############################################################################
 # IGNORE ALL BELOW THIS LINE
