@@ -148,6 +148,51 @@ df_subj %>%
     scale_colour_manual(values = palette_by_group(nGroups = nGroups,
                                                   nIter = nIter))
 
+# Next, let's explore the prob_discount parameter, to make sure the code
+# to run the simulations is working OK:
+
+nIter <- 100 # number of samples per condition
+nGroups <- 3 # number of conditions
+nTrials <- 2800 # number of trials of VPVD (200 per session)
+
+?simulate_choices_vpvd
+simulated_rats <- simulate_choices_vpvd(nTrials = nTrials,
+                                        nIter = nIter,
+                                        nGroups = nGroups,
+                                        alpha_w = rep(0.02, nIter * nGroups),
+                                        alpha_l = rep(0.002, nIter * nGroups),
+                                        beta = rep(2, nIter * nGroups),
+                                        kappa = rep(0.1, nIter * nGroups),
+                                        tau = rep(0.2, nIter * nGroups),
+                                        upsilon = c(rep(1, nIter),
+                                                    rep(5, nIter),
+                                                    rep(25, nIter))
+                                        )
+
+?summarise_correct_by_subj
+df_subj <- summarise_correct_by_subj(simulated_rats,
+                                     groups = c('rho=0', 'rho=5', 'rho=20'))
+df_group <- summarise_correct_by_group(df_subj)
+
+# Let's plot that out in ggplot, using geom_ribbon() to visualise the 50% HDI
+df_group %>%
+    ggplot(aes(x = session,
+               y = mean,
+               colour = grouping)) +
+    geom_ribbon(aes(ymin = q.250,
+                    ymax = q.750,
+                    fill = grouping),
+                alpha = 0.2,
+                colour = NA) +
+    geom_line() +
+    facet_grid(. ~ trial_type) +
+    ylim(0, 1) +
+    geom_hline(yintercept = 0.5,
+               linetype = 'dashed') +
+    theme_bw() +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2')
+
 # Next, let's take our actual posterior and feed that in to the simulator code.
 nIter <- 1000 # a minimum of 1000 to get accurate posterior y's
 nGroups <- 3
@@ -203,7 +248,7 @@ trial_type_labeller <- function(variable, value) {
 
 # These palettes are not exact
 palette_mona <- c('#585756',
-                'orange',
+                'gold',
                 'darkorange')
 
 palette_mona <- c('#585756',

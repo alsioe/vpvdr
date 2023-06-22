@@ -54,7 +54,7 @@ simulate_choices_vpvd <-
                         times = nIter)
                     )
 
-    # Make parameter VECTORS from paramater MATRICES
+    # Make parameter VECTORS from parameter MATRICES
     alpha_w <- c(alpha_w)
     alpha_l <- c(alpha_l)
     beta <- c(beta)
@@ -62,7 +62,7 @@ simulate_choices_vpvd <-
     tau <- c(tau)
     upsilon <- c(upsilon)
 
-    # Make parameter VECTORS from paramater MATRICES
+    # Make parameter VECTORS from parameter MATRICES
     # alpha_w <- c(w)
     # alpha_l <- c(l)
     # beta <- c(b)
@@ -76,9 +76,12 @@ simulate_choices_vpvd <-
     #stim_left <- data$stim_left
     #stim_right <- data$stim_right
 
+    # Create structures for simulated data
+    # (each column is a subject, each row is a trial
     choice <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     outcome <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     chose_right <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
+
     # This simulates all sessions with identical stimuli
     # -- consider updating this: at least randomise the order?
     stim_left <- trials$stim_left[1:nTrials]
@@ -91,19 +94,24 @@ simulate_choices_vpvd <-
     # tau <- par[5]
     # upsilon <- par[6]
 
+    # Values by position, left vs. right
     v_left <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     v_right <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
 
+    # Values by stimulus, negative, probe stimulus, positive
     v_neg <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     v_prob <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     v_pos <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
 
+    # Location stickiness indices, left vs. right
     cloc_left <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     cloc_right <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
 
+    # Stimulus stickiness indices, for stimulus presented left vs. right
     cstim_left <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     cstim_right <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
 
+    # Estimated probability for choosing left vs. right
     p_left <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
     p_right <- matrix(data=NA, nrow = nTrials, ncol = nSubj)
 
