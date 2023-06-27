@@ -3,6 +3,9 @@ library('tidyverse')
 library('cowplot')
 library('RColorBrewer')
 
+# Load the project
+load_all()
+
 # TO USE EXISTING R PACKAGE
 # library('devtools')
 # use_package('dplyr')
@@ -28,6 +31,7 @@ library('RColorBrewer')
 # use_r('palette_by_group')
 # use_r('summarise_correct_by_subj')
 # use_r('summarise_correct_by_group')
+# use_r('read_vpvd_data')
 
 # TO USE DATA IN PACKAGE
 # Example trials (could be made variable in the future, currently it is not)
@@ -45,15 +49,27 @@ library('RColorBrewer')
 # Let's start working ...
 
 # Tabula rasa
-rm(list=ls())
+# rm(list=ls())
 
-# The fits I have for citalopram are too large (ca 80 MB) to add to Github as
-# data so you'll need to copy the file locally and run a readRDS
+# The fits I have for citalopram etc. are too large (ca 80 MB) to add to Github as
+# data within the package, so you'll need to copy the file locally and run a readRDS
+#
+# like so ...
+githubURL <-
+    'https://github.com/alsioe/vpvdr/raw/main/helper/reversals_fit10.rds'
+download.file(url = githubURL,
+              destfile = 'test_fit10.rds')
+fit <- readRDS('test_fit10.rds')
+#
 list.files('helper/')
 fit <- readRDS("helper/reversals_fit10.rds")
 fit <- readRDS("helper/2A_reversals_fit1.rds")
 fit <- readRDS("helper/2C_reversals_fit6.rds")
 fit <- readRDS("helper/2C_reversals_fit10.rds")
+
+vpvd_data_file <- 'C://Users/sy22091/OneDrive - University of Bristol/Documents/Cambridge/Serotonin 2A and 2C on VPVD/VPVD M100907 data.csv'
+vpvd_dose_file <- 'C://Users/sy22091/OneDrive - University of Bristol/Documents/Cambridge/Serotonin 2A and 2C on VPVD/VPVD M100907 doses.csv'
+
 
 # Read in parameters using rstan::extract - this happens inside get_posteriors()
 # params <- rstan::extract(fit)
@@ -236,6 +252,8 @@ ppc_subj <- summarise_correct_by_subj(post_pred_check,
 
 ppc_group <- summarise_correct_by_group(ppc_subj)
 
+names(ppc_group)[names(ppc_group)=='grouping'] <- 'dose'
+
 # https://stackoverflow.com/questions/3472980/how-to-change-facet-labels
 # note format of 'labeller' function has been updated
 trial_types_labels <- list('vd' = 'Standard (A- < B+)',
@@ -248,8 +266,8 @@ trial_type_labeller <- function(variable, value) {
 
 # These palettes are not exact
 palette_mona <- c('#585756',
-                'gold',
-                'darkorange')
+                '#FEB300',
+                '#FE7B00')
 
 palette_mona <- c('#585756',
                   '#14CAFF',
@@ -259,22 +277,27 @@ palette_mona <- c('#585756',
 ppc_group %>%
     ggplot(aes(x = session,
                y = mean,
-               colour = grouping,
-               fill = grouping)) +
+               colour = dose,
+               fill = dose)) +
     geom_ribbon(aes(ymin = q.250,
                     ymax = q.750),
                 alpha = 0.2,
                 colour = NA,
                 show.legend = TRUE) +
-    geom_line() +
+    # geom_ribbon(aes(ymin = q.025,
+    #                 ymax = q.975),
+    #             alpha = 0.2,
+    #             colour = NA,
+    #             show.legend = TRUE) +
+    geom_line(linetype = 'dashed') +
     facet_grid(. ~ trial_type,
                labeller = trial_type_labeller
                ) +
     ylim(0, 1) +
     geom_hline(yintercept = 0.5,
-               linetype = 'dashed') +
+               linetype = 'dotted') +
     geom_hline(yintercept = 0.8,
-               linetype = 'dashed') +
+               linetype = 'dotted') +
     theme_bw() +
     # scale_color_brewer(palette = 'Blues') +
     # scale_fill_brewer(palette = 'Blues') +
@@ -288,7 +311,12 @@ ppc_group %>%
     # scale_fill_discrete(labels=c('0', '0.3', '1.0')) +
     scale_fill_manual(values = palette_mona) +
     scale_color_manual(values = palette_mona) +
-    xlab('Reversal session')
+    xlab('Reversal session') +
+    # REAL DATA
+    geom_line(data = data_by_session,
+              mapping = aes(x = session,
+                            y = mean,
+                            colour = dose))
 
 
 ###############################################################################
